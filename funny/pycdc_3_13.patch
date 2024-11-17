@@ -1,0 +1,74 @@
+diff --git a/ASTree.cpp b/ASTree.cpp
+index 1f419d0..3478ee4 100644
+--- a/ASTree.cpp
++++ b/ASTree.cpp
+@@ -1277,6 +1277,8 @@ PycRef<ASTNode> BuildFromCode(PycRef<PycCode> code, PycModule* mod)
+             break;
+         case Pyc::JUMP_FORWARD_A:
+         case Pyc::INSTRUMENTED_JUMP_FORWARD_A:
++        case Pyc::JUMP_BACKWARD_NO_INTERRUPT_A:
++        case Pyc::JUMP_BACKWARD_A:
+             {
+                 int offs = operand;
+                 if (mod->verCompare(3, 10) >= 0)
+@@ -2473,6 +2475,39 @@ PycRef<ASTNode> BuildFromCode(PycRef<PycCode> code, PycModule* mod)
+                 stack.push(next_tup);
+             }
+             break;
++        case Pyc::COPY_A:
++            {
++                if (!(operand > 0)) {
++                    fprintf(stderr, "invalid operand used with opcode COPY: %d\n", operand);
++                    cleanBuild = false;
++                    return new ASTNodeList(defblock->nodes());
++                }
++                stack.copy(operand);
++
++            }
++            break;
++        case Pyc::PUSH_EXC_INFO:
++            {
++                PycRef<ASTNode> except;
++                PycRef<ASTNode> node = stack.top();
++                stack.pop();
++                stack.push(except);
++                stack.push(node);
++            }
++            break;
++        case Pyc::CHECK_EXC_MATCH:
++            {
++            }
++            break;
++        case Pyc::RERAISE:
++        case Pyc::RERAISE_A:
++            {
++                auto arg = operand;
++                if (arg != 0) {
++                    stack.pop();
++                }
++            }
++            break;
+         default:
+             fprintf(stderr, "Unsupported opcode: %s (%d)\n", Pyc::OpcodeName(opcode), opcode);
+             cleanBuild = false;
+diff --git a/FastStack.h b/FastStack.h
+index 45f8ed5..04c6bb1 100644
+--- a/FastStack.h
++++ b/FastStack.h
+@@ -45,6 +45,16 @@ public:
+         return m_ptr == -1;
+     }
+ 
++    void copy(int index)
++    {
++        if (m_ptr > -1) {
++            PycRef<ASTNode> node(m_stack[m_ptr + 1 - index]);
++            if (node) {
++                push(node);
++            }
++        }
++    }
++
+ private:
+     std::vector<PycRef<ASTNode>> m_stack;
+     int m_ptr;
