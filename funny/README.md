@@ -1,6 +1,7 @@
 # [Rev] Funny
 
 Tree:
+-   \_\_pycache__/chal.cpython-313.pyc: Object file produced from running `python -m compileall chal.py`
 -   chal.py: Reconstructed Python source file based on pyc alone. Comments might be incorrectly placed
 -   funny.msg: This is the message decrypted from the middle of funny.pyc
 -   funny.pyc: The challenge file, not modified
